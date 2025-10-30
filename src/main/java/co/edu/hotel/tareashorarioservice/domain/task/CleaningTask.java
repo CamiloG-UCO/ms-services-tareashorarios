@@ -40,7 +40,6 @@ public class CleaningTask {
     private LocalDateTime createdAt;
 
     protected CleaningTask() {
-        // JPA only
     }
 
     public CleaningTask(String hotelName,

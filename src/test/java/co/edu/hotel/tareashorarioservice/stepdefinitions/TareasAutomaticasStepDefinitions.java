@@ -36,11 +36,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class TareasAutomaticasStepDefinitions {
 
-    @Autowired
-    private AutomaticCleaningTaskService automaticCleaningTaskService;
+    private final AutomaticCleaningTaskService automaticCleaningTaskService;
+    private final CleaningTaskRepository cleaningTaskRepository;
 
-    @Autowired
-    private CleaningTaskRepository cleaningTaskRepository;
+    public TareasAutomaticasStepDefinitions(AutomaticCleaningTaskService automaticCleaningTaskService, CleaningTaskRepository cleaningTaskRepository) {
+        this.automaticCleaningTaskService = automaticCleaningTaskService;
+        this.cleaningTaskRepository = cleaningTaskRepository;
+    }
 
     private String habitacion;
     private String hotel;
