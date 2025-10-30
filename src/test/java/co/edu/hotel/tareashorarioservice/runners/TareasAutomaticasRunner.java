@@ -2,6 +2,7 @@ package co.edu.hotel.tareashorarioservice.runners;
 
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
+import io.cucumber.spring.SpringFactory;
 import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
@@ -9,7 +10,8 @@ import org.junit.runner.RunWith;
         features = "src/test/resources/features/tareas_automaticas.feature",
         glue = "co.edu.hotel.tareashorarioservice.stepdefinitions",
         snippets = CucumberOptions.SnippetType.CAMELCASE,
-        plugin = {"pretty"}
+        plugin = {"pretty"},
+        objectFactory = SpringFactory.class
 )
 public class TareasAutomaticasRunner {
 }
