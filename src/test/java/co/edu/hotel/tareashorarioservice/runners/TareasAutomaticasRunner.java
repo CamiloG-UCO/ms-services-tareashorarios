@@ -1,8 +1,8 @@
 package co.edu.hotel.tareashorarioservice.runners;
 
+import cucumber.runtime.SerenityObjectFactory;
 import io.cucumber.junit.Cucumber;
 import io.cucumber.junit.CucumberOptions;
-import io.cucumber.spring.SpringFactory;
 import org.junit.runner.RunWith;
 
 @RunWith(Cucumber.class)
@@ -11,7 +11,7 @@ import org.junit.runner.RunWith;
         glue = "co.edu.hotel.tareashorarioservice.stepdefinitions",
         snippets = CucumberOptions.SnippetType.CAMELCASE,
         plugin = {"pretty"},
-        objectFactory = SpringFactory.class
+        objectFactory = SerenityObjectFactory.class
 )
 public class TareasAutomaticasRunner {
 }

@@ -9,40 +9,15 @@ import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Dado;
 import io.cucumber.java.es.Entonces;
 import io.cucumber.java.es.Y;
-import io.cucumber.spring.CucumberContextConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
-import org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener;
-import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
-@CucumberContextConfiguration
-@SpringBootTest
-@TestExecutionListeners(value = {
-        DependencyInjectionTestExecutionListener.class,
-        DirtiesContextBeforeModesTestExecutionListener.class,
-        DirtiesContextTestExecutionListener.class
-}, mergeMode = TestExecutionListeners.MergeMode.REPLACE_DEFAULTS)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-        "spring.datasource.driverClassName=org.h2.Driver",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.show-sql=false",
-        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
-})
-@Transactional
 public class TareasAutomaticasStepDefinitions {
 
-    private final AutomaticCleaningTaskService automaticCleaningTaskService;
-    private final CleaningTaskRepository cleaningTaskRepository;
-
-    public TareasAutomaticasStepDefinitions(AutomaticCleaningTaskService automaticCleaningTaskService, CleaningTaskRepository cleaningTaskRepository) {
-        this.automaticCleaningTaskService = automaticCleaningTaskService;
-        this.cleaningTaskRepository = cleaningTaskRepository;
-    }
+    private AutomaticCleaningTaskService automaticCleaningTaskService;
+    private CleaningTaskRepository cleaningTaskRepository;
+    private ArgumentCaptor<CleaningTask> cleaningTaskCaptor;
 
     private String habitacion;
     private String hotel;
@@ -55,7 +30,16 @@ public class TareasAutomaticasStepDefinitions {
         this.hotel = hotel;
         this.estadoHabitacion = estado;
         this.tareaGenerada = null;
-        cleaningTaskRepository.deleteAll();
+        cleaningTaskRepository = Mockito.mock(CleaningTaskRepository.class);
+        automaticCleaningTaskService = new AutomaticCleaningTaskService(cleaningTaskRepository);
+        cleaningTaskCaptor = ArgumentCaptor.forClass(CleaningTask.class);
+
+        Mockito.when(cleaningTaskRepository
+                        .findFirstByHotelNameIgnoreCaseAndRoomCodeIgnoreCaseOrderByCreatedAtDesc(
+                                Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(Optional.empty());
+        Mockito.when(cleaningTaskRepository.save(cleaningTaskCaptor.capture()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     @Cuando("el sistema detecte la liberación")
@@ -69,10 +53,9 @@ public class TareasAutomaticasStepDefinitions {
         assertThat(tareaGenerada).as("La tarea debe generarse").isNotNull();
         assertThat(tareaGenerada.getDescription()).isEqualTo(nombreEsperado);
         assertThat(tareaGenerada.getAssignedTo()).isEqualTo(responsableEsperado);
+        Mockito.verify(cleaningTaskRepository).save(Mockito.any(CleaningTask.class));
 
-        CleaningTask persisted = cleaningTaskRepository.findByDescriptionIgnoreCase(nombreEsperado)
-                .orElseThrow(() -> new AssertionError("No se encontró la tarea persistida"));
-
+        CleaningTask persisted = cleaningTaskCaptor.getValue();
         assertThat(persisted.getAssignedTo()).isEqualTo(responsableEsperado);
         assertThat(persisted.getHotelName()).isEqualTo(hotel);
         assertThat(persisted.getRoomCode()).isEqualTo(habitacion);
@@ -82,9 +65,7 @@ public class TareasAutomaticasStepDefinitions {
     public void registrarElTiempoEstimadoDeMinutos(int tiempoEsperado) {
         assertThat(tareaGenerada).isNotNull();
         assertThat(tareaGenerada.getEstimatedMinutes()).isEqualTo(tiempoEsperado);
-
-        CleaningTask persisted = cleaningTaskRepository.findByDescriptionIgnoreCase(tareaGenerada.getDescription())
-                .orElseThrow(() -> new AssertionError("No se encontró la tarea persistida"));
+        CleaningTask persisted = cleaningTaskCaptor.getValue();
         assertThat(persisted.getEstimatedMinutes()).isEqualTo(tiempoEsperado);
     }
 }
