@@ -20,3 +20,8 @@ Feature: Gestión de turnos
     Given los empleados "Pedro López, Laura Castro"
     When el supervisor asigne turnos del "2026-02-10" al "2026-02-16"
     Then el sistema debe registrar los horarios y enviar notificaciones a cada empleado
+
+  Scenario: Rechazar asignación por empleados duplicados
+    Given los empleados "Ana Torres"
+    When el supervisor asigne turnos del "2025-10-01" al "2025-10-07"
+    Then el sistema debe rechazar la asignación por empleados duplicados
